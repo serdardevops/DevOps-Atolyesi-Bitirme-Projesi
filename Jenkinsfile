@@ -102,10 +102,19 @@ pipeline {
             steps {
                 script {
                     echo "🐳 Docker image build ediliyor..."
-                    docker.withRegistry('', DOCKER_LOGIN) {
-                        docker_image = docker.build "${IMAGE_NAME}:${IMAGE_TAG}"
-                        docker_image.push("${IMAGE_TAG}")
-                        docker_image.push("latest")
+                    withCredentials([usernamePassword(credentialsId: DOCKER_LOGIN, passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                        sh """
+                            # Docker login
+                            echo \$DOCKER_PASS | sudo docker login -u \$DOCKER_USER --password-stdin
+                            
+                            # Docker build
+                            sudo docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                            sudo docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
+                            
+                            # Docker push
+                            sudo docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                            sudo docker push ${IMAGE_NAME}:latest
+                        """
                     }
                 }
             }
