@@ -1,0 +1,144 @@
+spring:
+  application:
+    name: devops-atolyesi-app
+  
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  
+  datasource:
+    url: jdbc:h2:mem:devopsdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+  
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: UTC
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+  error:
+    include-message: always
+    include-binding-errors: always
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,env
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+  info:
+    title: DevOps Atolyesi API
+    description: DevOps Bitirme Projesi REST API Documentation
+    version: 1.0.0
+    contact:
+      name: Serdar Selçuk
+      email: serdarselcuk@gmail.com
+      url: https://github.com/serdardevops/DevOps-Atolyesi-Bitirme-Projesi
+
+app:
+  version: 1.0.0
+  name: DevOps Atolyesi Bitirme Projesi
+  description: Complete CI/CD Pipeline Demo Application
+
+logging:
+  level:
+    com.devops.atolyesi: INFO
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+---
+# Development Profile
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:mem:devopsdb-dev
+  h2:
+    console:
+      enabled: true
+
+logging:
+  level:
+    root: INFO
+    com.devops.atolyesi: DEBUG
+
+server:
+  port: 8080
+
+---
+# Production Profile  
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:h2:mem:devopsdb-prod
+  h2:
+    console:
+      enabled: false
+
+logging:
+  level:
+    root: WARN
+    com.devops.atolyesi: INFO
+
+server:
+  port: 8080
+
+---
+# Docker Profile
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:h2:mem:devopsdb-docker
+
+logging:
+  level:
+    root: INFO
+    com.devops.atolyesi: INFO
+
+server:
+  port: 8080 
