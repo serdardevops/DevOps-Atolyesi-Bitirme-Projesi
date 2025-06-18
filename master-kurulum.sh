@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Master Makine Kurulum Scripti
-# Docker, Kubernetes Master, Jenkins, SonarQube, ArgoCD, Helm
+# Docker, Kubernetes Master, Jenkins, SonarQube, ArgoCD
 
 set -e
 
@@ -232,18 +232,7 @@ install_cni() {
     log "Flannel CNI kuruldu"
 }
 
-# Helm kurulumu
-install_helm() {
-    log "Helm kuruluyor..."
-    
-    curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | tee /usr/share/keyrings/helm.gpg > /dev/null
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | tee /etc/apt/sources.list.d/helm-stable-debian.list
-    
-    apt update
-    apt install -y helm
-    
-    log "Helm kuruldu"
-}
+# Helm kurulumu kaldırıldı (PATH sorunları nedeniyle)
 
 # Maven kurulumu
 install_maven() {
@@ -254,8 +243,14 @@ install_maven() {
     
     # JAVA_HOME ayarlama
     JAVA_HOME="/usr/lib/jvm/java-21-openjdk-$ARCH"
-    echo "export JAVA_HOME=$JAVA_HOME" >> /etc/environment
-    echo "export PATH=\$PATH:\$JAVA_HOME/bin" >> /etc/environment
+    
+    # /etc/environment dosyasına güvenli şekilde ekle
+    grep -q "JAVA_HOME" /etc/environment || echo "export JAVA_HOME=$JAVA_HOME" >> /etc/environment
+    
+    # JAVA_HOME/bin'i PATH'e ekle
+    if ! grep -q "$JAVA_HOME/bin" /etc/environment; then
+        sed -i "s|PATH=\"\(.*\)\"|PATH=\"\1:$JAVA_HOME/bin\"|" /etc/environment
+    fi
     
     # Maven indirme ve kurulum
     MAVEN_VERSION="3.9.6"
@@ -265,9 +260,13 @@ install_maven() {
     mv apache-maven-$MAVEN_VERSION /opt/maven
     
     # Maven PATH ayarlama
-    echo "export M2_HOME=/opt/maven" >> /etc/environment
-    echo "export MAVEN_HOME=/opt/maven" >> /etc/environment
-    echo "export PATH=\$PATH:/opt/maven/bin" >> /etc/environment
+    grep -q "M2_HOME" /etc/environment || echo "export M2_HOME=/opt/maven" >> /etc/environment
+    grep -q "MAVEN_HOME" /etc/environment || echo "export MAVEN_HOME=/opt/maven" >> /etc/environment
+    
+    # Maven bin'i PATH'e ekle
+    if ! grep -q "/opt/maven/bin" /etc/environment; then
+        sed -i "s|PATH=\"\(.*\)\"|PATH=\"\1:/opt/maven/bin\"|" /etc/environment
+    fi
     
     # Symlink oluştur
     ln -sf /opt/maven/bin/mvn /usr/local/bin/mvn
@@ -789,17 +788,43 @@ EOF
     log "Ağ ön gereksinimleri kontrol edildi."
 }
 
+# PATH düzeltme fonksiyonu
+fix_path() {
+    log "PATH yapılandırması düzeltiliyor..."
+    
+    # /etc/environment dosyasını temizle ve yeniden oluştur
+    cp /etc/environment /etc/environment.backup
+    
+    # Temel PATH'i ayarla
+    cat > /etc/environment << 'EOF'
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+EOF
+    
+    # Profil dosyalarını da düzelt
+    cat >> /etc/profile << 'EOF'
+
+# PATH düzeltmesi
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+EOF
+    
+    # Mevcut session için PATH'i düzelt
+    export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+    
+    log "PATH düzeltildi. Şu anki PATH: $PATH"
+}
+
 # Ana kurulum
 main() {
     log "All-in-One DevOps VM kurulumu başlıyor..."
     
+    fix_path
     update_system
     check_network_prerequisites
     setup_firewall
     install_docker
     install_kubernetes
     install_cni
-    install_helm
+    # install_helm # Kaldırıldı
     install_maven
     install_jenkins
     install_trivy

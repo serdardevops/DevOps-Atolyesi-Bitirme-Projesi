@@ -34,7 +34,6 @@ Docker, Kubernetes ve Jenkins Kullanarak CI/CD Projesi Oluşturma
 - **Trivy**: Security scanning
 - **Maven**: Java build tool
 - **Git**: Version control
-- **Helm**: Kubernetes package manager
 
 ## 📋 Proje Aşamaları
 
@@ -76,7 +75,6 @@ Docker, Kubernetes ve Jenkins Kullanarak CI/CD Projesi Oluşturma
 - [ ] K3s kurulumu (lightweight Kubernetes)
 - [ ] kubectl kurulumu ve yapılandırması
 - [ ] K3s cluster durumu kontrolü
-- [ ] Helm kurulumu
 - [ ] Kubernetes Dashboard kurulumu (opsiyonel)
 - [ ] Ingress controller yapılandırması
 - [ ] Namespace oluşturma (dev, staging, prod)
@@ -161,7 +159,7 @@ Docker, Kubernetes ve Jenkins Kullanarak CI/CD Projesi Oluşturma
 ### Aşama 7: GitOps ve Continuous Deployment
 #### 7.1 ArgoCD Kurulumu ve Yapılandırması
 - [ ] ArgoCD Kubernetes namespace oluşturma
-- [ ] ArgoCD Docker/Helm ile kurulum
+- [ ] ArgoCD Docker ile kurulum
 - [ ] ArgoCD UI erişimi (port-forward/ingress)
 - [ ] ArgoCD CLI kurulumu
 - [ ] Git repository bağlantısı
