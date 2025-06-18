@@ -25,7 +25,7 @@ pipeline {
         timeout(time: 30, unit: 'MINUTES')
         retry(2)
         timestamps()
-        ansiColor('xterm')
+        // ansiColor removed - plugin not available
     }
     stages {
         stage('Cleanup Workspace') {
