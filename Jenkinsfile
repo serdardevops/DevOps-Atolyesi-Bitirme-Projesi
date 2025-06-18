@@ -58,7 +58,7 @@ pipeline {
             }
             post {
                 always {
-                    junit testResultsPattern: 'target/surefire-reports/*.xml', allowEmptyResults: true
+                    junit testResults: 'target/surefire-reports/*.xml', allowEmptyResults: true
                     archiveArtifacts artifacts: 'target/surefire-reports/*', allowEmptyArchive: true
                 }
             }
@@ -255,7 +255,7 @@ EOF
     post {
         always {
             echo "Pipeline tamamlandı!"
-            junit testResultsPattern: 'target/surefire-reports/*.xml', allowEmptyResults: true
+            junit testResults: 'target/surefire-reports/*.xml', allowEmptyResults: true
             cleanWs()
         }
         success {
