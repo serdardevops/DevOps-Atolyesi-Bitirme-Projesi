@@ -219,7 +219,16 @@ install_kubernetes() {
     # Root için kubectl
     export KUBECONFIG=/etc/kubernetes/admin.conf
     
-    log "Kubernetes master kuruldu"
+    # Master node taint'lerini kaldır (All-in-One setup için)
+    log "Master node taint'leri kaldırılıyor (All-in-One setup için)..."
+    kubectl taint nodes --all node-role.kubernetes.io/control-plane:NoSchedule- || true
+    kubectl taint nodes --all node-role.kubernetes.io/master:NoSchedule- || true
+    
+    # Node durumunu kontrol et
+    log "Node durumu kontrol ediliyor..."
+    kubectl get nodes -o wide
+    
+    log "Kubernetes master kuruldu ve taint'ler kaldırıldı"
 }
 
 # CNI (Flannel) kurulumu
