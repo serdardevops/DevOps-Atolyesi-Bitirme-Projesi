@@ -104,16 +104,39 @@ pipeline {
                     echo "🐳 Docker image build ediliyor..."
                     withCredentials([usernamePassword(credentialsId: DOCKER_LOGIN, passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                         sh """
-                            # Docker login
-                            echo \$DOCKER_PASS | sudo docker login -u \$DOCKER_USER --password-stdin
+                            # Check docker permissions
+                            echo "Current user: \$(whoami)"
+                            echo "Docker groups: \$(groups)"
                             
-                            # Docker build
-                            sudo docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
-                            sudo docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
-                            
-                            # Docker push
-                            sudo docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                            sudo docker push ${IMAGE_NAME}:latest
+                            # Try docker without sudo first
+                            if docker info > /dev/null 2>&1; then
+                                echo "✅ Docker works without sudo"
+                                # Docker login
+                                echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
+                                
+                                # Docker build
+                                docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                                docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
+                                
+                                # Docker push
+                                docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                                docker push ${IMAGE_NAME}:latest
+                            else
+                                echo "❌ Docker needs sudo, trying alternative approach"
+                                # Set docker socket permissions temporarily
+                                sudo chmod 666 /var/run/docker.sock
+                                
+                                # Docker login
+                                echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
+                                
+                                # Docker build
+                                docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                                docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
+                                
+                                # Docker push
+                                docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                                docker push ${IMAGE_NAME}:latest
+                            fi
                         """
                     }
                 }
