@@ -90,9 +90,9 @@ pipeline {
             steps {
                 script {
                     echo "🏆 SonarQube Quality Gate kontrolü..."
-                    timeout(time: 10, unit: 'MINUTES') {
-                        waitForQualityGate abortPipeline: false, credentialsId: 'jenkins-sonarqube-token'
-                    }
+                    echo "⏳ Timeout yok - analiz bitene kadar bekleniyor..."
+                    waitForQualityGate abortPipeline: false, credentialsId: 'jenkins-sonarqube-token'
+                    echo "✅ Quality Gate tamamlandı!"
                 }
             }
         }
