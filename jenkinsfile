@@ -1,8 +1,6 @@
 pipeline {
-    agent {
-        label 'master'
-    }
-    // agent any
+    agent any
+    // Single node setup - any available agent
 
     environment {
         APP_NAME = "devops-atolyesi-app"
