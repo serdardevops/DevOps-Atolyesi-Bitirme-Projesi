@@ -85,11 +85,30 @@ setup_firewall() {
 install_docker() {
     log "Docker kuruluyor..."
     
+    # DNS ayarlarını kontrol et (Docker repository erişimi için)
+    log "DNS ayarları Docker için kontrol ediliyor..."
+    echo "nameserver 8.8.8.8" > /etc/resolv.conf
+    echo "nameserver 8.8.4.4" >> /etc/resolv.conf
+    
     # Eski Docker sürümlerini kaldır
     apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
     
-    # Docker GPG anahtarı ve repository
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    # Docker GPG anahtarı ve repository - retry logic ile
+    log "Docker GPG anahtarı indiriliyor..."
+    for i in {1..3}; do
+        if curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg; then
+            log "Docker GPG anahtarı başarıyla indirildi"
+            break
+        else
+            warn "Docker GPG anahtar indirme denemesi $i başarısız, tekrar deneniyor..."
+            sleep 5
+        fi
+        
+        if [ $i -eq 3 ]; then
+            error "Docker GPG anahtarı indirilemedi. Network/DNS sorunu olabilir."
+            exit 1
+        fi
+    done
     
     # Mimari bazlı repository ekleme
     echo "deb [arch=$ARCH signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
@@ -115,11 +134,38 @@ install_kubernetes() {
     swapoff -a
     sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
     
+    # DNS ayarlarını kontrol et ve düzelt
+    log "DNS ayarları kontrol ediliyor..."
+    echo "nameserver 8.8.8.8" > /etc/resolv.conf
+    echo "nameserver 8.8.4.4" >> /etc/resolv.conf
+    
+    # Network bağlantısını test et
+    log "Network bağlantısı test ediliyor..."
+    if ! ping -c 3 8.8.8.8 >/dev/null 2>&1; then
+        warn "Internet bağlantısı problemi var, devam ediliyor..."
+    fi
+    
     # Kubernetes repository - Ubuntu 24.04 Noble için güncellendi
     mkdir -p /etc/apt/keyrings
-    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
     
-    echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list
+    # Kubernetes v1.30 repository (güncel ve kararlı sürüm)
+    log "Kubernetes GPG anahtarı indiriliyor..."
+    for i in {1..3}; do
+        if curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg; then
+            log "GPG anahtarı başarıyla indirildi"
+            break
+        else
+            warn "GPG anahtar indirme denemesi $i başarısız, tekrar deneniyor..."
+            sleep 5
+        fi
+        
+        if [ $i -eq 3 ]; then
+            error "GPG anahtarı indirilemedi. Network/DNS sorunu olabilir."
+            exit 1
+        fi
+    done
+    
+    echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list
     
     apt update
     apt install -y kubelet kubeadm kubectl
@@ -219,14 +265,24 @@ install_kubernetes() {
     # Root için kubectl
     export KUBECONFIG=/etc/kubernetes/admin.conf
     
+    # Kubernetes cluster'ın hazır olmasını bekle
+    log "Kubernetes cluster'ın hazır olması bekleniyor..."
+    sleep 30
+    
+    # kubectl erişimini test et
+    if ! kubectl get nodes >/dev/null 2>&1; then
+        warn "kubectl henüz erişilebilir değil, 30 saniye daha bekleniyor..."
+        sleep 30
+    fi
+    
     # Master node taint'lerini kaldır (All-in-One setup için)
     log "Master node taint'leri kaldırılıyor (All-in-One setup için)..."
-    kubectl taint nodes --all node-role.kubernetes.io/control-plane:NoSchedule- || true
-    kubectl taint nodes --all node-role.kubernetes.io/master:NoSchedule- || true
+    kubectl taint nodes --all node-role.kubernetes.io/control-plane:NoSchedule- 2>/dev/null || true
+    kubectl taint nodes --all node-role.kubernetes.io/master:NoSchedule- 2>/dev/null || true
     
     # Node durumunu kontrol et
     log "Node durumu kontrol ediliyor..."
-    kubectl get nodes -o wide
+    kubectl get nodes -o wide || warn "Node durumu şu anda görüntülenemiyor"
     
     log "Kubernetes master kuruldu ve taint'ler kaldırıldı"
 }
@@ -827,6 +883,18 @@ main() {
     log "All-in-One DevOps VM kurulumu başlıyor..."
     
     fix_path
+    
+    # Erken DNS düzeltmesi
+    log "Erken DNS kontrolü ve düzeltmesi..."
+    echo "nameserver 8.8.8.8" > /etc/resolv.conf
+    echo "nameserver 8.8.4.4" >> /etc/resolv.conf
+    
+    # Hızlı internet bağlantısı testi
+    if ! ping -c 2 8.8.8.8 >/dev/null 2>&1; then
+        error "Internet bağlantısı yok! Kurulum iptal ediliyor."
+        exit 1
+    fi
+    
     update_system
     check_network_prerequisites
     setup_firewall

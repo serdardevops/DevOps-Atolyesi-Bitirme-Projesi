@@ -245,4 +245,26 @@ devops-bitirme-projesi/
 - Automated backup strategies
 - Performance testing integration
 
+## 🔧 Bilinen Sorunlar ve Çözümleri
+
+### DNS/Network Sorunları
+**Problem:** `Could not resolve host: prod-cdn.packages.k8s.io`
+```bash
+curl: (6) Could not resolve host: prod-cdn.packages.k8s.io
+gpg: no valid OpenPGP data found.
+```
+
+**Çözüm:** Script otomatik DNS düzeltmesi içeriyor:
+- Google DNS (8.8.8.8, 8.8.4.4) kullanımı
+- 3x retry logic GPG anahtar indirmeler için
+- Erken internet bağlantısı kontrolü
+
+### PATH Sorunları  
+**Problem:** `command not found: ls, pwd, kubectl`
+**Çözüm:** Script başında otomatik PATH düzeltmesi
+
+### Kubernetes Taint Sorunları
+**Problem:** Pod'lar Pending durumunda kalıyor
+**Çözüm:** Master node taint'leri otomatik kaldırılıyor
+
 Bu plan size nasıl görünüyor? Hangi aşamadan başlamak istersiniz?
