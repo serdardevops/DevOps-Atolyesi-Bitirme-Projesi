@@ -33,8 +33,18 @@ log "Sistem mimarisi: $ARCH"
 # Sistem güncellemesi
 update_system() {
     log "Sistem güncelleniyor..."
+    
+    # DNS ayarlarını güncelleme öncesi kontrol et
+    log "DNS ayarları apt update için kontrol ediliyor..."
+    echo "nameserver 8.8.8.8" > /etc/resolv.conf
+    echo "nameserver 8.8.4.4" >> /etc/resolv.conf
+    
+    # Temel araçları kur (curl, wget vb. DNS testleri için gerekli)
+    apt install -y curl wget net-tools iputils-ping
+    
+    # Ana güncelleme
     apt update && apt upgrade -y
-    apt install -y curl wget git vim htop net-tools ufw unzip
+    apt install -y git vim htop ufw unzip
 }
 
 # Firewall yapılandırması
@@ -148,10 +158,10 @@ install_kubernetes() {
     # Kubernetes repository - Ubuntu 24.04 Noble için güncellendi
     mkdir -p /etc/apt/keyrings
     
-    # Kubernetes v1.30 repository (güncel ve kararlı sürüm)
+    # Kubernetes v1.32 repository (güncel ve kararlı sürüm)
     log "Kubernetes GPG anahtarı indiriliyor..."
     for i in {1..3}; do
-        if curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg; then
+        if curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg; then
             log "GPG anahtarı başarıyla indirildi"
             break
         else
@@ -165,7 +175,7 @@ install_kubernetes() {
         fi
     done
     
-    echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list
+    echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list
     
     apt update
     apt install -y kubelet kubeadm kubectl
@@ -889,10 +899,24 @@ main() {
     echo "nameserver 8.8.8.8" > /etc/resolv.conf
     echo "nameserver 8.8.4.4" >> /etc/resolv.conf
     
-    # Hızlı internet bağlantısı testi
-    if ! ping -c 2 8.8.8.8 >/dev/null 2>&1; then
-        error "Internet bağlantısı yok! Kurulum iptal ediliyor."
-        exit 1
+    # Internet bağlantısı testi (çoklu yöntem)
+    log "Internet bağlantısı test ediliyor..."
+    
+    # Yöntem 1: ping testi
+    if ping -c 2 8.8.8.8 >/dev/null 2>&1; then
+        log "✅ Ping testi başarılı"
+    # Yöntem 2: curl testi  
+    elif curl -s --connect-timeout 10 http://google.com >/dev/null 2>&1; then
+        log "✅ HTTP erişimi başarılı (ping engellenmiş olabilir)"
+    # Yöntem 3: wget testi
+    elif wget -q --spider --timeout=10 http://google.com >/dev/null 2>&1; then
+        log "✅ Wget erişimi başarılı"
+    # Yöntem 4: DNS çözümleme testi
+    elif nslookup google.com 8.8.8.8 >/dev/null 2>&1; then
+        log "✅ DNS çözümleme başarılı"
+    else
+        warn "Temel internet testleri başarısız. Yine de devam ediliyor..."
+        log "Not: VM network ayarları veya firewall nedeniyle test başarısız olabilir."
     fi
     
     update_system
