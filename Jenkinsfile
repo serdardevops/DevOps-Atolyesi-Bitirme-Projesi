@@ -202,7 +202,7 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 8080
-      nodePort: 30090
+      nodePort: 30091
   type: NodePort
 EOF
                         
@@ -247,8 +247,8 @@ EOF
                         SERVICE_IP=\$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[0].address}')
                         
                         # Health check
-                        echo "Health check: http://\$SERVICE_IP:30090/actuator/health"
-                        curl -f http://\$SERVICE_IP:30090/actuator/health || echo "Health check failed"
+                        echo "Health check: http://\$SERVICE_IP:30091/actuator/health"
+                        curl -f http://\$SERVICE_IP:30091/actuator/health || echo "Health check failed"
                         
                         # Smoke test
                         echo "Application smoke test başarılı!"
