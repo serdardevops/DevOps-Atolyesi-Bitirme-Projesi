@@ -73,8 +73,8 @@ setup_firewall() {
     # Jenkins
     ufw allow 8080
     
-    # SonarQube
-    ufw allow 9000
+    # Trivy cache (if needed)
+    # ufw allow 9000
     
     # ArgoCD
     ufw allow 30080
@@ -389,110 +389,7 @@ install_trivy() {
     log "Trivy kuruldu"
 }
 
-# SonarQube kurulumu
-install_sonarqube() {
-    log "SonarQube kuruluyor..."
-    
-    # SonarQube ayarları
-    SONAR_VERSION="25.5.0.107428"
-    SONAR_USER="sonar"
-    SONAR_HOME="/opt/sonarqube"
-    SONAR_ZIP="sonarqube-$SONAR_VERSION.zip"
-    SONAR_DOWNLOAD_URL="https://binaries.sonarsource.com/Distribution/sonarqube/$SONAR_ZIP"
-    SONAR_SERVICE_FILE="/etc/systemd/system/sonarqube.service"
-    
-    # Mevcut SonarQube'u kaldır (varsa)
-    log "Önceki SonarQube kurulumu kaldırılıyor (varsa)..."
-    systemctl stop sonarqube.service 2>/dev/null || true
-    systemctl disable sonarqube.service 2>/dev/null || true
-    rm -f $SONAR_SERVICE_FILE
-    systemctl daemon-reload
-    rm -rf $SONAR_HOME
-    
-    # H2 Database kullanılacak (embedded)
-    
-    # SonarQube kullanıcısı - varsa kaldır ve yeniden oluştur
-    log "SonarQube kullanıcısı oluşturuluyor..."
-    userdel -r $SONAR_USER 2>/dev/null || true
-    useradd -m -s /bin/bash $SONAR_USER
-    
-    # SonarQube indirme ve kurulum
-    log "/tmp dizinine geçiliyor ve SonarQube indiriliyor..."
-    cd /tmp
-    wget -c $SONAR_DOWNLOAD_URL -O $SONAR_ZIP
-    
-    log "SonarQube arşivi açılıyor..."
-    unzip -q -o $SONAR_ZIP -d /opt
-    mv /opt/sonarqube-$SONAR_VERSION $SONAR_HOME
-    
-    # SonarQube yapılandırması (H2 Database ile)
-    log "SonarQube yapılandırılıyor..."
-    cat > $SONAR_HOME/conf/sonar.properties << EOF
-# H2 embedded database (default)
-sonar.web.host=0.0.0.0
-sonar.web.port=9000
-sonar.web.context=/
-EOF
-    
-    # Java 21 yapılandırması
-    log "Java 21 yapılandırılıyor..."
-    if [ "$ARCH" == "arm64" ]; then
-        log "ARM64 mimarisi için Java yapılandırılıyor..."
-        mkdir -p $SONAR_HOME/conf/
-        echo "wrapper.java.command=/usr/lib/jvm/java-21-openjdk-arm64/bin/java" > $SONAR_HOME/conf/wrapper.conf
-        
-        # SonarQube başlatma scriptini ARM için düzenle
-        if [ ! -d "$SONAR_HOME/bin/linux-arm64" ]; then
-            mkdir -p $SONAR_HOME/bin/linux-arm64
-            cp $SONAR_HOME/bin/linux-x86-64/sonar.sh $SONAR_HOME/bin/linux-arm64/
-            chmod +x $SONAR_HOME/bin/linux-arm64/sonar.sh
-        fi
-    else
-        log "x86_64 mimarisi için Java yapılandırılıyor..."
-        mkdir -p $SONAR_HOME/conf/
-        echo "wrapper.java.command=/usr/lib/jvm/java-21-openjdk-amd64/bin/java" > $SONAR_HOME/conf/wrapper.conf
-    fi
-    
-    # Systemd servis dosyası
-    log "SonarQube systemd servisi oluşturuluyor..."
-    cat > $SONAR_SERVICE_FILE << EOF
-[Unit]
-Description=SonarQube service
-After=network.target
 
-[Service]
-Type=forking
-User=$SONAR_USER
-Group=$SONAR_USER
-ExecStart=$SONAR_HOME/bin/linux-$ARCH/sonar.sh start
-ExecStop=$SONAR_HOME/bin/linux-$ARCH/sonar.sh stop
-Restart=always
-LimitNOFILE=65536
-LimitNPROC=4096
-TimeoutStartSec=5
-
-[Install]
-WantedBy=multi-user.target
-EOF
-    
-    # İzinleri ayarla
-    log "İzinler ayarlanıyor..."
-    chown -R $SONAR_USER:$SONAR_USER $SONAR_HOME
-    
-    # Sistem limitleri ayarla
-    log "Sistem limitleri yapılandırılıyor..."
-    echo "vm.max_map_count=524288" >> /etc/sysctl.conf
-    echo "fs.file-max=131072" >> /etc/sysctl.conf
-    sysctl -p
-    
-    # SonarQube'u başlat
-    log "SonarQube servisi başlatılıyor..."
-    systemctl daemon-reload
-    systemctl enable sonarqube
-    systemctl start sonarqube
-    
-    log "SonarQube kuruldu"
-}
 
 # ArgoCD kurulumu
 install_argocd() {
