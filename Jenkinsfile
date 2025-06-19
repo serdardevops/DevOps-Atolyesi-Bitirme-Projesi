@@ -150,7 +150,12 @@ pipeline {
                     echo "☸️ Kubernetes'e deploy ediliyor..."
                     sh """
                         # Update image in deployment YAML
+                        echo "🔄 Updating deployment.yaml with image: ${IMAGE_NAME}:${IMAGE_TAG}"
                         sed -i.bak "s|IMAGE_PLACEHOLDER|${IMAGE_NAME}:${IMAGE_TAG}|g" k8s/deployment.yaml
+                        
+                        # Verify image replacement
+                        echo "✅ Updated deployment.yaml:"
+                        grep -n "image:" k8s/deployment.yaml
                         
                         # Show what will be deployed
                         echo "📦 Deploying Kubernetes manifests:"
@@ -178,14 +183,31 @@ pipeline {
                             fi
                         fi
                         
+                        # Clean up any failed pods first
+                        kubectl delete pods -l app=${APP_NAME} --field-selector=status.phase=Failed || true
+                        
                         # Kubernetes'e deploy et (sadece YAML dosyaları, kustomization hariç)
                         kubectl apply -f k8s/deployment.yaml --validate=false
                         kubectl apply -f k8s/service.yaml --validate=false
                         
                         # Deployment durumunu kontrol et
+                        echo "🚀 Waiting for deployment rollout..."
                         kubectl rollout status deployment/${APP_NAME} -n ${NAMESPACE} --timeout=600s
-                        kubectl get pods -n ${NAMESPACE} -l app=${APP_NAME}
+                        
+                        echo "📋 Pod status after deployment:"
+                        kubectl get pods -n ${NAMESPACE} -l app=${APP_NAME} -o wide
+                        
+                        echo "🌐 Service status:"
                         kubectl get svc -n ${NAMESPACE} -l app=${APP_NAME}
+                        
+                        # Check for any failed pods and describe them
+                        echo "🔍 Checking for any failed pods..."
+                        kubectl get pods -n ${NAMESPACE} -l app=${APP_NAME} --field-selector=status.phase=Failed --no-headers | while read pod; do
+                            if [ ! -z "\$pod" ]; then
+                                echo "❌ Failed pod found: \$pod"
+                                kubectl describe pod \$pod
+                            fi
+                        done || true
                     """
                 }
             }
