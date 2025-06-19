@@ -55,7 +55,7 @@ public class DevOpsService {
     public List<Map<String, String>> getDevOpsTools() {
         return Arrays.asList(
             Map.of("tool", "Jenkins", "version", "2.414.x", "purpose", "CI/CD Automation"),
-            Map.of("tool", "SonarQube", "version", "9.9.x", "purpose", "Code Quality Analysis"),
+
             Map.of("tool", "Docker", "version", "24.0.x", "purpose", "Containerization"),
             Map.of("tool", "Kubernetes", "version", "1.32.x", "purpose", "Container Orchestration"),
             Map.of("tool", "ArgoCD", "version", "2.9.x", "purpose", "GitOps Deployment"),
@@ -80,7 +80,7 @@ public class DevOpsService {
             Map.of("stage", "Build Application", "status", "SUCCESS", "duration", "45s"),
             Map.of("stage", "Unit Tests", "status", "SUCCESS", "duration", "30s"),
             Map.of("stage", "Package Application", "status", "SUCCESS", "duration", "20s"),
-            Map.of("stage", "SonarQube Analysis", "status", "SUCCESS", "duration", "60s"),
+
             Map.of("stage", "Quality Gate", "status", "SUCCESS", "duration", "15s"),
             Map.of("stage", "Build Docker Image", "status", "SUCCESS", "duration", "90s"),
             Map.of("stage", "Security Scan", "status", "SUCCESS", "duration", "45s"),

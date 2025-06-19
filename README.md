@@ -90,7 +90,7 @@ Docker, Kubernetes ve Jenkins Kullanarak CI/CD Projesi Oluşturma
   - Maven Integration plugin
   - Pipeline plugin
   - Pipeline: Stage View plugin
-  - SonarQube Scanner plugin
+  - Pipeline plugins
   - Blue Ocean plugin (modern UI)
   - SSH Agent plugin
   - GitHub Integration plugin
@@ -107,13 +107,9 @@ Docker, Kubernetes ve Jenkins Kullanarak CI/CD Projesi Oluşturma
 - [ ] JAVA_HOME environment variable ayarlama
 
 ### Aşama 4: Code Quality ve Security Araçları
-#### 4.1 SonarQube Kurulumu
-- [ ] SonarQube Docker container kurulumu (H2 embedded database)
-- [ ] SonarQube initial setup
-- [ ] Quality Gates yapılandırması
-- [ ] SonarQube Scanner for Maven kurulumu
-- [ ] Jenkins-SonarQube entegrasyonu (SonarQube plugin)
-- [ ] SonarQube webhook yapılandırması
+#### 4.1 Code Quality & Security
+- [ ] Trivy security scanner kurulumu
+- [ ] Maven Checkstyle configuration
 
 #### 4.2 Trivy Security Scanner
 - [ ] Trivy kurulumu
@@ -140,7 +136,7 @@ Docker, Kubernetes ve Jenkins Kullanarak CI/CD Projesi Oluşturma
 - [ ] Multi-stage pipeline oluşturma:
   - Source Code Checkout
   - Maven Build & Test
-  - SonarQube Code Analysis & Quality Gate
+  - Maven Build & Package
   - Unit Test Coverage Report
   - Trivy Filesystem Security Scan
   - Docker Image Build
@@ -178,7 +174,7 @@ Docker, Kubernetes ve Jenkins Kullanarak CI/CD Projesi Oluşturma
 #### 8.1 Backup Stratejisi
 - [ ] Full VM snapshot backup
 - [ ] Jenkins configuration backup (/var/jenkins_home)
-- [ ] SonarQube data backup
+- [ ] Jenkins jobs backup
 - [ ] Kubernetes persistent volume backup
 - [ ] Git repositories backup strategy
 
@@ -208,7 +204,7 @@ devops-bitirme-projesi/
 │   ├── Jenkinsfile
 │   ├── docker-compose.yml
 │   └── plugins.txt
-├── sonarqube/
+├── trivy-cache/
 │   └── docker-compose.yml
 ├── kubernetes/
 │   ├── app-deployment.yaml

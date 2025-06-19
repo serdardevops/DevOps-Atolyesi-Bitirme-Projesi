@@ -733,8 +733,7 @@ $(kubectl get services --all-namespaces)
 Jenkins: http://$MASTER_IP:8080
 - Admin şifresi: /home/ubuntu/jenkins-password.txt
 
-SonarQube: http://$MASTER_IP:9000
-- Varsayılan: admin/admin (H2 Database)
+
 
 ArgoCD: http://$MASTER_IP:30080
 - Kullanıcı: admin
