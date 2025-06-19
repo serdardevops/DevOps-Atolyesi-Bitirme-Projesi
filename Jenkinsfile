@@ -183,7 +183,7 @@ pipeline {
                         kubectl apply -f k8s/service.yaml --validate=false
                         
                         # Deployment durumunu kontrol et
-                        kubectl rollout status deployment/${APP_NAME} -n ${NAMESPACE} --timeout=300s
+                        kubectl rollout status deployment/${APP_NAME} -n ${NAMESPACE} --timeout=600s
                         kubectl get pods -n ${NAMESPACE} -l app=${APP_NAME}
                         kubectl get svc -n ${NAMESPACE} -l app=${APP_NAME}
                     """
