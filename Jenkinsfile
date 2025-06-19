@@ -178,8 +178,9 @@ pipeline {
                             fi
                         fi
                         
-                        # Kubernetes'e deploy et (ayrı YAML dosyalarından)
-                        kubectl apply -f k8s/ --validate=false
+                        # Kubernetes'e deploy et (sadece YAML dosyaları, kustomization hariç)
+                        kubectl apply -f k8s/deployment.yaml --validate=false
+                        kubectl apply -f k8s/service.yaml --validate=false
                         
                         # Deployment durumunu kontrol et
                         kubectl rollout status deployment/${APP_NAME} -n ${NAMESPACE} --timeout=300s
