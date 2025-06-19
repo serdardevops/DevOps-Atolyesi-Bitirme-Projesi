@@ -12,7 +12,7 @@ pipeline {
         JENKINS_API_TOKEN = credentials("JENKINS_API_TOKEN")
         
         // Kubernetes deployment için
-        KUBECONFIG = "/home/ubuntu/.kube/config"
+        KUBECONFIG = "/var/lib/jenkins/.kube/config"
         NAMESPACE = "default"
     }
     tools {
@@ -205,6 +205,23 @@ spec:
       nodePort: 30090
   type: NodePort
 EOF
+                        
+                        # Check kubectl access
+                        echo "🔧 kubectl config durumu kontrol ediliyor..."
+                        if kubectl cluster-info > /dev/null 2>&1; then
+                            echo "✅ kubectl erişimi başarılı"
+                        else
+                            echo "❌ kubectl config sorunu, alternative config deneniyor..."
+                            # Try alternative config paths
+                            if [ -f /var/lib/jenkins/.kube/config ]; then
+                                export KUBECONFIG=/var/lib/jenkins/.kube/config
+                            elif [ -f /home/ubuntu/.kube/config ]; then
+                                echo "🔧 ubuntu config kullanılıyor..."
+                                sudo cp /home/ubuntu/.kube/config /tmp/k8s-config
+                                sudo chown jenkins:jenkins /tmp/k8s-config
+                                export KUBECONFIG=/tmp/k8s-config
+                            fi
+                        fi
                         
                         # Kubernetes'e deploy et
                         kubectl apply -f k8s-deployment.yaml
