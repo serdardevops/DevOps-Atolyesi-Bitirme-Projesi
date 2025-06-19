@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: devops-atolyesi-app
-        image: IMAGE_PLACEHOLDER
+        image: serdardevops/devops-atolyesi-app:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
