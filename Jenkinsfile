@@ -21,9 +21,9 @@ pipeline {
     }
     options {
         timeout(time: 30, unit: 'MINUTES')
-        retry(2)
         timestamps()
         // ansiColor removed - plugin not available
+        // retry removed - no auto restart on failure
     }
     stages {
         stage('Cleanup Workspace') {
@@ -56,23 +56,12 @@ pipeline {
                     sh 'mvn test'
                 }
             }
-            post {
-                always {
-                    junit testResults: 'target/surefire-reports/*.xml', allowEmptyResults: true
-                    archiveArtifacts artifacts: 'target/surefire-reports/*', allowEmptyArchive: true
-                }
-            }
         }
         stage('Package Application') {
             steps {
                 script {
                     echo "📦 Uygulama paketleniyor..."
                     sh 'mvn package -DskipTests'
-                }
-            }
-            post {
-                success {
-                    archiveArtifacts artifacts: 'target/*.jar', allowEmptyArchive: true
                 }
             }
         }
@@ -244,42 +233,6 @@ pipeline {
                         # Backup dosyalarını temizle
                         rm -f k8s/*.bak
                     """
-                }
-            }
-        }
-    }
-    
-    post {
-        always {
-            echo "Pipeline tamamlandı!"
-            junit testResults: 'target/surefire-reports/*.xml', allowEmptyResults: true
-            cleanWs()
-        }
-        success {
-            echo "✅ Pipeline başarıyla tamamlandı!"
-            script {
-                try {
-                    mail(
-                        subject: "✅ Jenkins Build Success: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
-                        body: "Build başarıyla tamamlandı! Job: ${env.JOB_NAME}, Build: ${env.BUILD_NUMBER}, Image Tag: ${IMAGE_TAG}",
-                        to: "serdarselcuk@gmail.com"
-                    )
-                } catch (Exception e) {
-                    echo "Email gönderilemedi: ${e.getMessage()}"
-                }
-            }
-        }
-        failure {
-            echo "❌ Pipeline başarısız oldu!"
-            script {
-                try {
-                    mail(
-                        subject: "❌ Jenkins Build Failed: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
-                        body: "Build başarısız oldu! Job: ${env.JOB_NAME}, Build: ${env.BUILD_NUMBER}, Log: ${env.BUILD_URL}",
-                        to: "serdarselcuk@gmail.com"
-                    )
-                } catch (Exception e) {
-                    echo "Email gönderilemedi: ${e.getMessage()}"
                 }
             }
         }
