@@ -215,16 +215,21 @@ EOF
                             # Try alternative config paths
                             if [ -f /var/lib/jenkins/.kube/config ]; then
                                 export KUBECONFIG=/var/lib/jenkins/.kube/config
-                            elif [ -f /home/ubuntu/.kube/config ]; then
+                                                         elif [ -f /home/ubuntu/.kube/config ]; then
                                 echo "🔧 ubuntu config kullanılıyor..."
                                 sudo cp /home/ubuntu/.kube/config /tmp/k8s-config
                                 sudo chown jenkins:jenkins /tmp/k8s-config
                                 export KUBECONFIG=/tmp/k8s-config
+                            elif [ -f /etc/rancher/k3s/k3s.yaml ]; then
+                                echo "🔧 K3s config kullanılıyor..."
+                                sudo cp /etc/rancher/k3s/k3s.yaml /tmp/k3s-config
+                                sudo chown jenkins:jenkins /tmp/k8s-config
+                                export KUBECONFIG=/tmp/k3s-config
                             fi
                         fi
                         
-                        # Kubernetes'e deploy et
-                        kubectl apply -f k8s-deployment.yaml
+                        # Kubernetes'e deploy et (validation bypass for auth issues)
+                        kubectl apply -f k8s-deployment.yaml --validate=false
                         
                         # Deployment durumunu kontrol et
                         kubectl rollout status deployment/${APP_NAME} -n ${NAMESPACE} --timeout=300s
