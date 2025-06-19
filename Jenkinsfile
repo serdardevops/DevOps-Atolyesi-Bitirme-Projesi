@@ -160,51 +160,12 @@ pipeline {
                 script {
                     echo "☸️ Kubernetes'e deploy ediliyor..."
                     sh """
-                        # Deployment yaml oluştur
-                        cat > k8s-deployment.yaml << EOF
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: ${APP_NAME}
-  namespace: ${NAMESPACE}
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: ${APP_NAME}
-  template:
-    metadata:
-      labels:
-        app: ${APP_NAME}
-    spec:
-      containers:
-      - name: ${APP_NAME}
-        image: ${IMAGE_NAME}:${IMAGE_TAG}
-        ports:
-        - containerPort: 8080
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ${APP_NAME}-service
-  namespace: ${NAMESPACE}
-spec:
-  selector:
-    app: ${APP_NAME}
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8080
-      nodePort: 30091
-  type: NodePort
-EOF
+                        # Update image in deployment YAML
+                        sed -i.bak "s|IMAGE_PLACEHOLDER|${IMAGE_NAME}:${IMAGE_TAG}|g" k8s/deployment.yaml
+                        
+                        # Show what will be deployed
+                        echo "📦 Deploying Kubernetes manifests:"
+                        ls -la k8s/
                         
                         # Check kubectl access
                         echo "🔧 kubectl config durumu kontrol ediliyor..."
@@ -228,12 +189,13 @@ EOF
                             fi
                         fi
                         
-                        # Kubernetes'e deploy et (validation bypass for auth issues)
-                        kubectl apply -f k8s-deployment.yaml --validate=false
+                        # Kubernetes'e deploy et (ayrı YAML dosyalarından)
+                        kubectl apply -f k8s/ --validate=false
                         
                         # Deployment durumunu kontrol et
                         kubectl rollout status deployment/${APP_NAME} -n ${NAMESPACE} --timeout=300s
                         kubectl get pods -n ${NAMESPACE} -l app=${APP_NAME}
+                        kubectl get svc -n ${NAMESPACE} -l app=${APP_NAME}
                     """
                 }
             }
@@ -261,29 +223,8 @@ EOF
                 script {
                     echo "🚀 ArgoCD ile GitOps deployment..."
                     sh """
-                        # ArgoCD app oluştur veya güncelle
-                        cat > argocd-app.yaml << EOF
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: ${APP_NAME}
-  namespace: argocd
-spec:
-  project: default
-  source:
-    repoURL: https://github.com/serdardevops/DevOps-Atolyesi-Bitirme-Projesi
-    targetRevision: Main
-    path: k8s-manifests
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: ${NAMESPACE}
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-EOF
-                        
-                        kubectl apply -f argocd-app.yaml
+                        # ArgoCD app deploy et (ayrı YAML dosyasından)
+                        kubectl apply -f manifests/argocd-app.yaml
                     """
                 }
             }
@@ -300,8 +241,8 @@ EOF
                         # Dangling images temizle
                         docker image prune -f
                         
-                        # Workspace temizle
-                        rm -f k8s-deployment.yaml argocd-app.yaml
+                        # Backup dosyalarını temizle
+                        rm -f k8s/*.bak
                     """
                 }
             }

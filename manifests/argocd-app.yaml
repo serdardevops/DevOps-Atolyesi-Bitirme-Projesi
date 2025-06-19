@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: devops-atolyesi-app
+  namespace: argocd
+  labels:
+    app: devops-atolyesi-app
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/serdardevops/DevOps-Atolyesi-Bitirme-Projesi
+    targetRevision: Main
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  revisionHistoryLimit: 3 
