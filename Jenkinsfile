@@ -75,7 +75,7 @@ pipeline {
                 }
             }
         }
-        /*
+        
         stage("Quality Gate") {
             steps {
                 script {
@@ -86,7 +86,7 @@ pipeline {
                 }
             }
         }
-        */
+        
         stage('Build Docker Image') {
             steps {
                 script {
