@@ -11,7 +11,7 @@ Docker, Kubernetes ve Jenkins Kullanarak CI/CD Projesi Oluşturma
 ┌─────────────────────────────────────────────────┐
 │                DevOps VM                        │
 │  ┌─────────────┐ ┌─────────────┐ ┌───────────┐ │
-│  │   Jenkins   │ │  SonarQube  │ │  ArgoCD   │ │
+│  │   Jenkins   │ │  ArgoCD   │ │  Dashboard │ │
 │  │   :8080     │ │    :9000    │ │   :8090   │ │
 │  └─────────────┘ └─────────────┘ └───────────┘ │
 │  ┌─────────────┐ ┌─────────────┐ ┌───────────┐ │
@@ -30,7 +30,7 @@ Docker, Kubernetes ve Jenkins Kullanarak CI/CD Projesi Oluşturma
 - **Docker**: Containerization
 - **Kubernetes (K3s)**: Container orchestration
 - **Jenkins**: CI/CD automation
-- **SonarQube**: Code quality analysis
+- **Trivy**: Security vulnerability scanning
 - **Trivy**: Security scanning
 - **Maven**: Java build tool
 - **Git**: Version control
@@ -48,7 +48,7 @@ Docker, Kubernetes ve Jenkins Kullanarak CI/CD Projesi Oluşturma
 - [ ] SSH erişimi ayarlama
 - [ ] Port mapping yapılandırması:
   - Jenkins: 8080
-  - SonarQube: 9000  
+    
   - ArgoCD Server: 9090
   - ArgoCD UI: 8090
   - Kubernetes API: 6443

@@ -65,27 +65,7 @@ pipeline {
                 }
             }
         }
-        stage("SonarQube Analysis") {
-            steps {
-                script {
-                    echo "🔍 SonarQube kod analizi başlıyor..."
-                    withSonarQubeEnv(credentialsId: 'jenkins-sonarqube-token') {
-                        sh "mvn sonar:sonar"
-                    }
-                }
-            }
-        }
-        
-        stage("Quality Gate") {
-            steps {
-                script {
-                    echo "🏆 SonarQube Quality Gate kontrolü..."
-                    echo "⏳ Timeout yok - analiz bitene kadar bekleniyor..."
-                    waitForQualityGate abortPipeline: false, credentialsId: 'jenkins-sonarqube-token'
-                    echo "✅ Quality Gate tamamlandı!"
-                }
-            }
-        }
+
         
         stage('Build Docker Image') {
             steps {

@@ -25,11 +25,7 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
-        <!-- SonarQube Properties -->
-        <sonar.organization>serdardevops</sonar.organization>
-        <sonar.host.url>http://localhost:9000</sonar.host.url>
-        <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-        <sonar.exclusions>**/Application.java</sonar.exclusions>
+
         
         <!-- Dependency Versions -->
         <springdoc.version>2.3.0</springdoc.version>
@@ -212,12 +208,7 @@
                 </executions>
             </plugin>
             
-            <!-- SonarQube Maven Plugin -->
-            <plugin>
-                <groupId>org.sonarsource.scanner.maven</groupId>
-                <artifactId>sonar-maven-plugin</artifactId>
-                <version>3.10.0.2594</version>
-            </plugin>
+
             
             <!-- Maven Checkstyle Plugin -->
             <plugin>

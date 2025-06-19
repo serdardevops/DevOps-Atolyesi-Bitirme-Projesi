@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Master Makine Kurulum Scripti
-# Docker, Kubernetes Master, Jenkins, SonarQube, ArgoCD
+# Docker, Kubernetes Master, Jenkins, ArgoCD
 
 set -e
 
@@ -929,7 +929,7 @@ main() {
     install_maven
     install_jenkins
     install_trivy
-    install_sonarqube
+    # install_sonarqube  # SonarQube kurulumu devre dışı
     install_argocd
     install_k8s_dashboard
     create_join_token
@@ -938,7 +938,6 @@ main() {
     log "All-in-One DevOps VM kurulumu tamamlandı!"
     log "Erişim bilgileri:"
     log "Jenkins: http://$MASTER_IP:8080"
-    log "SonarQube: http://$MASTER_IP:9000"
     log "ArgoCD: http://$MASTER_IP:30080"
     log "Kubernetes Dashboard: https://$MASTER_IP:30001"
     log "Sample App: http://$MASTER_IP:30090"
