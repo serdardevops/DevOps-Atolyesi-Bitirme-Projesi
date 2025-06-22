@@ -263,4 +263,3 @@ gpg: no valid OpenPGP data found.
 **Problem:** Pod'lar Pending durumunda kalıyor
 **Çözüm:** Master node taint'leri otomatik kaldırılıyor
 
-Bu plan size nasıl görünüyor? Hangi aşamadan başlamak istersiniz?

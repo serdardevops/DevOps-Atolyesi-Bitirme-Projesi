@@ -29,3 +29,8 @@ replay_pid*
 Proje-Asamasi/
 target/
 *.bak
+
+# PDF Raporu (Private - GitHub'a gitmemeli)
+DevOps-Bitirme-Projesi-Raporu.md
+DevOps-Bitirme-Projesi-Raporu.pdf
+Screenshots/
