@@ -235,11 +235,6 @@ devops-bitirme-projesi/
 - ✅ Rollback capability
 - ✅ Comprehensive documentation
 
-## 🚀 Bonus Özellikler
-- Slack/Teams notifications
-- Blue-Green deployment
-- Automated backup strategies
-- Performance testing integration
 
 ## 🔧 Bilinen Sorunlar ve Çözümleri
 
